@@ -17,7 +17,10 @@ const transporter = nodeMailer.createTransport({
   const html = await ejs.renderFile(
     `${__dirname}/email.ejs`,
     {
+     message: options.message,
+     token: options.token || '',
       user: options.user,
+      action: options.action || "Activate account",
       url: options.url,
     }
   );

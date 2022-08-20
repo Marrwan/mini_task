@@ -5,7 +5,17 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" href="/stylesheets/emailStyle.css" />
     <title> Account Activation</title>
+    <script>
+        function copyToCliBoard() {
+            var copyText = document.getElementById("myInput");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); /* For mobile devices */
+            document.execCommand("copy");
+            alert("Copied the text: " + copyText.value);
+          }
+    </script>
     <style>
+
       
 
 img {
@@ -357,14 +367,12 @@ hr {
                   >
                     <tr>
                       <td>
+                        
                         <p>Hi <%= user.email %> ,</p>
                         <p>
-                          Welcome to FOODELO , we're glad to have you 🎉🙏
+                            <%= message %> 
                         </p>
-                        <p>
-                          We're all a big family here, so activate your account
-                          to get started !
-                        </p>
+                        
                         <table
                           role="presentation"
                           border="0"
@@ -372,6 +380,7 @@ hr {
                           cellspacing="0"
                           class="btn btn-primary"
                         >
+         
                           <tbody>
                             <tr>
                               <td align="left">
@@ -385,7 +394,7 @@ hr {
                                     <tr>
                                       <td>
                                         <a href="<%=url%>" target="_blank"
-                                          >Activate Account</a
+                                          ><%= action  %></a
                                         >
                                       </td>
                                     </tr>

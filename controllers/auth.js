@@ -92,7 +92,8 @@ exports.signup = async (req, res) => {
         "host"
       )}/api/auth/verify/${activationToken}`;
 
-      const message = `GO to this link to activate your FOODELO ${activationURL} .Account`;
+      const message = `  Welcome to FOODELO , we're glad to have you 🎉.  \n We're all a big family here, so activate your account
+      to get started ! \n Click the button below to activate your Account`;
 
       sendMail({
         email,
@@ -236,10 +237,12 @@ exports.forgotPassword = async (req, res) => {
         "host"
         )}/api/auth/reset/${token}`;
     
-        const message = `GO to this link to reset your password ${resetURL} .Account`;
+        const message = `Use this token ${token} to reset your password. Use the token together with your new password as request body to reset your password.`;
     
         sendMail({
         email,
+        token,
+        action: "reset Password",
         message,
         subject: "Your Password Reset Link for FOODELO App !",
         user,
@@ -258,9 +261,40 @@ exports.forgotPassword = async (req, res) => {
     }
     }
 
-    exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res) => {
         try {
             const { token, password } = req.body;
+            // check is token present in request body
+            if (!token)
+            return res
+                .status(400)
+                .json({ status: "error", message: "Token is missing" });
+            // check if password is present in request body
+            if (!password)
+            return res
+                .status(400)
+                .json({ status: "error", message: "Password is missing" });
+
+                schema
+                .is()
+                .min(8) // Minimum length 8
+                .has()
+                .uppercase() // Must have uppercase letters
+                .has()
+                .lowercase() // Must have lowercase letters
+                .has()
+                .symbols() // Must have symbols
+                .has()
+                .digits() // Must have digits
+                .has()
+                .not()
+                .spaces(); // Should not have spaces
+            if (!schema.validate(password))
+            return  res.status(400).json({
+                status: "error",
+                message:
+                  "Password must be at least 8 characters long, must contain lowercase, uppercase, digits and symbols",
+              });
             const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
             const user = await User.findOne({
                 passwordResetLink: hashedToken,
@@ -272,7 +306,11 @@ exports.forgotPassword = async (req, res) => {
             user.passwordResetLink = undefined;
             user.password = password;
             await user.save({ validateBeforeSave: false });
-            res.status(200).render("passwordreset");
+            res.status(200).json({
+                status: "success",
+                message: "Password reset successfully",
+                });
+
         } catch (error) {
             console.log(error);
             return res

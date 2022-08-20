@@ -19,12 +19,10 @@ const userSchema = new mongoose.Schema({
     activationLink: {
       type: String,
     },
-    posts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Post',
-      },
-    ],
+    passwordResetLink: {
+        type: String,
+    },
+
   });
 
   // userSchema.pre(/^find/, async function (next) {
@@ -59,6 +57,17 @@ userSchema.pre('save', async function (next) {
   
     return activationToken;
   };
+
+    userSchema.methods.createPasswordResetLink = function () {
+    const passwordResetToken = crypto.randomBytes(32).toString('hex');
+    this.passwordResetLink = crypto
+        .createHash('sha256')
+        .update(passwordResetToken)
+        .digest('hex');
+
+    return passwordResetToken;
+    }
+    
   userSchema.methods.comparePassword = async (candidatePassword, userPassword) => {
     const result = await bcrypt.compare(candidatePassword, userPassword);
     return result;
