@@ -98,3 +98,10 @@ POST /api
 POST /api/:id/cart
 
 ```
+### /api/:id/pay
+#### pay for product
+
+```
+POST /api/:id/pay
+
+```

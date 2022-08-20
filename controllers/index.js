@@ -1,6 +1,7 @@
 const Product = require('../models/Product');
 const Cart = require('../models/Cart');
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 
 exports.getProducts = async(req, res, next) => {
@@ -71,16 +72,22 @@ exports.createProduct = async(req, res, next) => {
 // Add product to cart
 exports.addProductToCart = async(req, res, next) => {
     try {
+        const token = req.cookies.token;
+        if (!token) return res.status(401).json({   status: 'error', message: 'Unauthorized' });  // 401 Unauthorized
+    //  Check is token is valid
+        const decoded = await jwt.verify(token , process.env.JWT_SECRET);
+    // Check if user still exists
+        const user = await User.findById(decoded.id);
+       
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ status: 'error', message: 'Product not found' });
-        const cart = await Cart.findOne({ user: req.user.id });
+        const cart = await Cart.findOne({ user: user.id });
         if (!cart) {
             const newCart = new Cart({
-                user: req.user.id,
-                products: [{
-                    product: req.params.id,
-                    quantity: 1
-                }]
+                user: user,
+                products: [product],
+                quantity: 1
+               
             });
             const cart = await newCart.save();
             res.status(201).json({
@@ -109,6 +116,7 @@ exports.addProductToCart = async(req, res, next) => {
             });
         }
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             status: 'error',
             message: 'Something went wrong'
@@ -119,12 +127,18 @@ exports.addProductToCart = async(req, res, next) => {
 // Pay for product
 exports.payForProduct = async(req, res) => {
     try {
-        const cart = await Cart.findOne({ user: req.user.id });
+        const token = req.cookies.token;
+        if (!token) return res.status(401).json({   status: 'error', message: 'Unauthorized' });  // 401 Unauthorized
+    //  Check is token is valid
+        const decoded = await jwt.verify(token , process.env.JWT_SECRET);
+    // Check if user still exists
+        const user = await User.findById(decoded.id);
+       
+        const cart = await Cart.findOne({ user: user.id });
         if (!cart) return res.status(404).json({ status: 'error', message: 'Cart not found' });
         const products = cart.products;
         products.forEach(async(product) => {
             const productInCart = await Product.findById(product.product);
-            productInCart.stock -= product.quantity;
             await productInCart.save();
         } );
         await cart.remove();
@@ -133,6 +147,7 @@ exports.payForProduct = async(req, res) => {
             message: 'Payment successful'
         });
     } catch (error) {
+        console.log(error);
         res.status(400).json({
             status: 'error',
             message: 'Something went wrong'
@@ -140,15 +155,3 @@ exports.payForProduct = async(req, res) => {
     }
 }
 
-
-
-
-// create a dummy product
-// const product = new Product({
-//     name: 'Product 1',
-//     price: 10,
-//     description: 'This is a product',8f162f1e1131?ixlib
-//     image: 'https://images.unsplash.com/photo-1518791841217-=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60',
-//     stock: 10
-// });
-// product.save();
